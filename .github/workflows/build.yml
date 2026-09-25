@@ -122,11 +122,12 @@ jobs:
         shell: bash
 
       - name: Download OctoGram Client
-        uses: robinraju/release-downloader@v1
-        with:
-          fileName: "OctoGram_arm64.apk"
-          repository: OctoGramApp/OctoGram
-          latest: true
+        run: |
+          TAG=$(gh release list --repo OctoGramApp/OctoGram --limit 1 --json tagName --jq '.[0].tagName')
+          gh release download "$TAG" --repo OctoGramApp/OctoGram --pattern "OctoGram_arm64.apk"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
 
       - name: Patch OctoGram Client
         run: |
@@ -175,4 +176,3 @@ jobs:
           body_path: release_body.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
