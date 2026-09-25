@@ -121,22 +121,21 @@ jobs:
         run: ls -l *.apk *.jar
         shell: bash
 
-      - name: Download and Patch TelegramWeb Client
+      - name: Download OctoGram Client
+        uses: robinraju/release-downloader@v1
+        with:
+          fileName: "OctoGram_arm64.apk"
+          repository: OctoGramApp/OctoGram
+          latest: true
+
+      - name: Patch OctoGram Client
         run: |
-          curl -fL --retry 2 --retry-delay 2 --retry-all-errors -o telegramWeb.apk https://telegram.org/dl/android/apk
-          java -jar *.jar -l 2 telegramWeb.apk $(cat module_list.txt)
+          java -jar *.jar -l 2 OctoGram_arm64.apk $(cat module_list.txt)
         shell: bash
 
-      - name: Download and Patch TelegramBeta Client
+      - name: Rename OctoGram Patched APK
         run: |
-          curl -fL --retry 2 --retry-delay 2 --retry-all-errors -o telegramBeta.apk https://telegram.org/dl/android/apk-public-beta
-          java -jar *.jar -l 2 telegramBeta.apk $(cat module_list.txt)
-        shell: bash
-
-      - name: Rename Telegram Patched APKs
-        run: |
-          mv telegramWeb-*.apk telegramWeb-lsp.apk
-          mv telegramBeta-*.apk telegramBeta-lsp.apk
+          mv OctoGram_arm64-*.apk octogram-lsp.apk
         shell: bash
 
       - name: Create Release Info
@@ -147,15 +146,10 @@ jobs:
 
           chmod +x "$AAPT"
 
-          TGWEB_INFO=$("$AAPT" dump badging telegramWeb-lsp.apk | grep versionName)
-          TGWeb_VersionName=$(echo "$TGWEB_INFO" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
-          TGWeb_VersionCode=$(echo "$TGWEB_INFO" | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
-          TGWeb_Version="$TGWeb_VersionName ($TGWeb_VersionCode)"
-
-          TGBETA_INFO=$("$AAPT" dump badging telegramBeta-lsp.apk | grep versionName)
-          TGBeta_VersionName=$(echo "$TGBETA_INFO" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
-          TGBeta_VersionCode=$(echo "$TGBETA_INFO" | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
-          TGBeta_Version="$TGBeta_VersionName ($TGBeta_VersionCode)"
+          OCTO_INFO=$("$AAPT" dump badging octogram-lsp.apk | grep versionName)
+          OCTO_VersionName=$(echo "$OCTO_INFO" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
+          OCTO_VersionCode=$(echo "$OCTO_INFO" | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
+          OCTO_Version="$OCTO_VersionName ($OCTO_VersionCode)"
 
           echo "Used modules:" > release_body.txt
           echo "- Re-Telegram" >> release_body.txt
@@ -166,8 +160,7 @@ jobs:
           echo "- TGnoBottomStuff" >> release_body.txt
           echo "" >> release_body.txt
           echo "Clients:" >> release_body.txt
-          echo "- Telegram Web - $TGWeb_Version" >> release_body.txt
-          echo "- Telegram Beta - $TGBeta_Version" >> release_body.txt
+          echo "- OctoGram - $OCTO_Version" >> release_body.txt
           echo "" >> release_body.txt
           echo "Patched at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> release_body.txt
         shell: bash
@@ -182,3 +175,4 @@ jobs:
           body_path: release_body.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
